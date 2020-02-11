@@ -32,7 +32,7 @@ export default class extends Component {
   }
   getClient = client => {
     const { _id, name, mobile, date, work, address: { area, building, wing, room } } = client;
-    client = {
+    return {
       id: _id,
       name: name,
       mobile: mobile,
@@ -43,7 +43,6 @@ export default class extends Component {
       wing: wing,
       room: room
     }
-    return client
   }
 
   handleChange = e => {
@@ -73,6 +72,7 @@ export default class extends Component {
     })
       .then(_ => {
         if (e) {
+          console.log("reached")
           alert("Client Updated");
         }
       })
@@ -96,7 +96,15 @@ export default class extends Component {
       window.$("#workModal").modal("hide");
       this.handleSubmit()
     })
+  }
 
+  deleteClient = () => {
+    const { id } = this.state;
+    Axios.delete(`/client/${id}`)
+      .then(({ data }) => {
+        this.props.history.push("/")
+      })
+      .catch(err => console.log(err));
   }
 
   render = () => {
@@ -192,7 +200,10 @@ export default class extends Component {
                   </div>
                 </div>
                 <div className="col-12 text-center">
-                  <button type="submit" className="btn btn-primary btn-block px-4">Add Client</button>
+                  <button type="submit" className="btn btn-primary btn-block mb-3 px-4">Update Client</button>
+                </div>
+                <div className="col-12 text-center">
+                  <input type="button" className="btn btn-danger btn-block px-4" value="Delete Client" onClick={this.deleteClient} />
                 </div>
               </div>
             </div>
