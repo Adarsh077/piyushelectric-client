@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import Axios from "axios";
 import uuid from "uuid/v4"
 
+Axios.defaults.baseURL = "https://piyushelectronics.herokuapp.com/";
+
 export default class extends Component {
 
   constructor() {
