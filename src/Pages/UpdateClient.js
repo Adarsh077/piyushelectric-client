@@ -1,8 +1,8 @@
 import React, { Component } from "react";
-import uuid from "uuid/v4"
+import uuid from "uuid/v4";
 import Axios from "axios";
 
-Axios.defaults.baseURL = "https://piyushelectronics.herokuapp.com/"
+Axios.defaults.baseURL = "https://piyushelectronics.herokuapp.com/";
 
 export default class extends Component {
   constructor() {
@@ -20,18 +20,28 @@ export default class extends Component {
       editWorkTitle: "",
       editWorkDate: "",
       editIdx: "",
-    }
+      addWork: "",
+      addWorkDate: ""
+    };
   }
 
   componentDidMount = () => {
-    const clientID = localStorage.getItem("clientID")
-    Axios.get(`/client/${clientID}`)
-      .then(({ data }) => {
-        this.setState({ ...this.getClient(data) }, () => window.$('#work').DataTable())
-      })
-  }
+    const clientID = localStorage.getItem("clientID");
+    Axios.get(`/client/${clientID}`).then(({ data }) => {
+      this.setState({ ...this.getClient(data) }, () =>
+        window.$("#work").DataTable()
+      );
+    });
+  };
   getClient = client => {
-    const { _id, name, mobile, date, work, address: { area, building, wing, room } } = client;
+    const {
+      _id,
+      name,
+      mobile,
+      date,
+      work,
+      address: { area, building, wing, room }
+    } = client;
     return {
       id: _id,
       name: name,
@@ -42,8 +52,8 @@ export default class extends Component {
       building: building,
       wing: wing,
       room: room
-    }
-  }
+    };
+  };
 
   handleChange = e => {
     const { value, name } = e.target;
@@ -57,33 +67,48 @@ export default class extends Component {
       newState[name] = value;
       this.setState(newState);
     }
-  }
+  };
 
   handleSubmit = e => {
     if (e) e.preventDefault();
-    const { name, area, building, mobile, date, work, wing, room, id } = this.state;
+    console.log(this.state);
+    const {
+      name,
+      area,
+      building,
+      mobile,
+      date,
+      work,
+      wing,
+      room,
+      id
+    } = this.state;
     if (mobile.toString().length !== 10) {
       alert("Incorrent Mobile No.");
       return;
     }
     Axios.put(`/client/${id}`, {
-      name, mobile, date, work,
-      address: { area, building, wing, room },
+      name,
+      mobile,
+      date,
+      work,
+      address: { area, building, wing, room }
     })
       .then(_ => {
-        if (e) {
-          console.log("reached")
-          alert("Client Updated");
-        }
+        if (e) alert("Client Updated");
       })
-      .catch(err => console.log(err))
-  }
+      .catch(err => console.log(err));
+  };
 
   editWork = idx => {
     const work = this.state.work[idx];
-    this.setState({ editWorkTitle: work.title, editWorkDate: work.date, editIdx: idx })
-    window.$('#workModal').modal("show")
-  }
+    this.setState({
+      editWorkTitle: work.title,
+      editWorkDate: work.date,
+      editIdx: idx
+    });
+    window.$("#workModal").modal("show");
+  };
 
   saveEditWork = () => {
     const { work, editIdx, editWorkTitle, editWorkDate } = this.state;
@@ -91,24 +116,47 @@ export default class extends Component {
     newWork[editIdx] = {
       title: editWorkTitle,
       date: editWorkDate
-    }
+    };
     this.setState({ work: newWork }, () => {
       window.$("#workModal").modal("hide");
-      this.handleSubmit()
-    })
-  }
+      this.handleSubmit();
+    });
+  };
 
   deleteClient = () => {
     const { id } = this.state;
     Axios.delete(`/client/${id}`)
       .then(({ data }) => {
-        this.props.history.push("/")
+        this.props.history.push("/");
       })
       .catch(err => console.log(err));
-  }
+  };
+
+  addWork = () => {
+    const { addWork, addWorkDate } = this.state;
+    const newWork = this.state.work.slice();
+    newWork.push({ title: addWork, date: addWorkDate });
+    this.setState(
+      { work: newWork, addWork: "", addWorkDate: "" },
+      this.handleSubmit
+    );
+  };
 
   render = () => {
-    const { name, mobile, date, work, area, building, room, wing, editWorkTitle, editWorkDate } = this.state;
+    const {
+      name,
+      mobile,
+      date,
+      work,
+      area,
+      building,
+      room,
+      wing,
+      editWorkTitle,
+      editWorkDate,
+      addWork,
+      addWorkDate
+    } = this.state;
     return (
       <div className="row container-fluid mt-5">
         <div className="col-12 col-md-6 col-lg-4 m-auto">
@@ -200,16 +248,59 @@ export default class extends Component {
                   </div>
                 </div>
                 <div className="col-12 text-center">
-                  <button type="submit" className="btn btn-primary btn-block mb-3 px-4">Update Client</button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary btn-block mb-3 px-4"
+                  >
+                    Update
+                  </button>
+                  <hr />
                 </div>
                 <div className="col-12 text-center">
-                  <input type="button" className="btn btn-danger btn-block px-4" value="Delete Client" onClick={this.deleteClient} />
+                  <input
+                    type="button"
+                    className="btn btn-danger btn-block px-4"
+                    value="Delete"
+                    onClick={this.deleteClient}
+                  />
                 </div>
               </div>
             </div>
           </form>
         </div>
         <div className="col-12 col-md-6 col-lg-6 mx-auto">
+          <div className="mb-3 mt-3 mt-md-0">
+            <div className="row">
+              <div className="col-12 col-md-6 col-lg-5">
+                <div className="form-group mb-lg-0">
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="addWork"
+                    value={addWork}
+                    onChange={this.handleChange}
+                    placeholder="Work"
+                  />
+                </div>
+              </div>
+              <div className="col-12 col-md-6 col-lg-5">
+                <div className="form-group mb-lg-0">
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="addWorkDate"
+                    value={addWorkDate}
+                    onChange={this.handleChange}
+                    placeholder="Date"
+                  />
+                </div>
+              </div>
+              <div className="col-12 col-lg-2" onClick={this.addWork}>
+                <span className="btn btn-block btn-outline-primary">Add</span>
+              </div>
+            </div>
+          </div>
+          <hr />
           <table id="work" className="table table-hover">
             <thead>
               <tr>
@@ -220,21 +311,39 @@ export default class extends Component {
             <tbody>
               {work.map(({ title, date }, idx) => {
                 return (
-                  <tr key={uuid()} style={{ cursor: "pointer" }} onClick={this.editWork.bind(this, idx)}>
+                  <tr
+                    key={uuid()}
+                    style={{ cursor: "pointer" }}
+                    onClick={this.editWork.bind(this, idx)}
+                  >
                     <td>{title}</td>
                     <td>{date}</td>
                   </tr>
-                )
+                );
               })}
             </tbody>
           </table>
         </div>
-        <div className="modal fade" id="workModal" tabIndex="-1" role="dialog" aria-labelledby="workModalLable" aria-hidden="true">
+        <div
+          className="modal fade"
+          id="workModal"
+          tabIndex="-1"
+          role="dialog"
+          aria-labelledby="workModalLable"
+          aria-hidden="true"
+        >
           <div className="modal-dialog" role="document">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title" id="workModalLable">Edit Work</h5>
-                <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+                <h5 className="modal-title" id="workModalLable">
+                  Edit Work
+                </h5>
+                <button
+                  type="button"
+                  className="close"
+                  data-dismiss="modal"
+                  aria-label="Close"
+                >
                   <span aria-hidden="true">&times;</span>
                 </button>
               </div>
@@ -261,13 +370,25 @@ export default class extends Component {
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" className="btn btn-primary" onClick={this.saveEditWork}>Save changes</button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-dismiss="modal"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={this.saveEditWork}
+                >
+                  Save changes
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
-    )
-  }
+    );
+  };
 }
