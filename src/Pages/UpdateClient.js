@@ -1,248 +1,198 @@
 import React, { Component } from "react";
 import uuid from "uuid/v4";
-import Axios from "axios";
-
-Axios.defaults.baseURL = "https://piyushelectronics.herokuapp.com/";
+import { Axios } from "../Constants";
+import AddWork from "../Components/AddWork/AddWork";
 
 export default class extends Component {
   constructor() {
     super();
     this.state = {
-      id: "",
-      name: "",
-      work: [],
-      date: "",
-      area: "",
-      building: "",
-      room: "",
-      wing: "",
-      mobile: "",
-      editWorkTitle: "",
-      editWorkDate: "",
-      editIdx: "",
-      addWork: "",
-      addWorkDate: ""
+      client: {},
+      isUpdating: false,
+      addWork: { title: "", date: "" }
     };
   }
 
-  componentDidMount = () => {
-    const clientID = localStorage.getItem("clientID");
-    Axios.get(`/client/${clientID}`).then(({ data }) => {
-      this.setState({ ...this.getClient(data) }, () =>
-        window.$("#work").DataTable()
-      );
+  componentDidMount = () => this.reinitializeData();
+
+  reinitializeData = () => {
+    const client = localStorage.getItem("client");
+    this.setState({ client: JSON.parse(client) }, () => {
+      window.$("#work").DataTable();
     });
   };
-  getClient = client => {
-    const {
-      _id,
-      name,
-      mobile,
-      date,
-      work,
-      address: { area, building, wing, room }
-    } = client;
-    return {
-      id: _id,
-      name: name,
-      mobile: mobile,
-      work: work,
-      date: date,
-      area: area,
-      building: building,
-      wing: wing,
-      room: room
-    };
-  };
 
-  handleChange = e => {
-    const { value, name } = e.target;
-    const newState = this.state;
-    if (name === "mobile") {
-      if (value.length < 11) {
-        newState[name] = value;
-        this.setState(newState);
-      }
+  handleChange = (e, key1, key2, key3) => {
+    const { value } = e.target,
+      state = this.state;
+    if (key2 === "mobile") if (value.length >= 11) return;
+    if (key3) {
+      state[key1][key2][key3] = value;
     } else {
-      newState[name] = value;
-      this.setState(newState);
+      state[key1][key2] = value;
     }
+    this.setState(state);
   };
 
   handleSubmit = e => {
     if (e) e.preventDefault();
-    console.log(this.state);
-    const {
-      name,
-      area,
-      building,
-      mobile,
-      date,
-      work,
-      wing,
-      room,
-      id
-    } = this.state;
-    if (mobile.toString().length !== 10) {
-      alert("Incorrent Mobile No.");
+    const { client } = this.state;
+    const { mobile } = client;
+    if (mobile.toString().length > 10) {
+      alert("Incorrent   No.");
       return;
     }
-    Axios.put(`/client/${id}`, {
-      name,
-      mobile,
-      date,
-      work,
-      address: { area, building, wing, room }
-    })
+    this.setState({ isUpdating: true });
+    Axios.put(`/client/`, client)
       .then(_ => {
-        if (e) alert("Client Updated");
+        localStorage.setItem("client", JSON.stringify(_.data));
+        this.setState(
+          { isUpdating: false, client: _.data },
+          this.reinitializeData
+        );
       })
       .catch(err => console.log(err));
-  };
-
-  editWork = idx => {
-    const work = this.state.work[idx];
-    this.setState({
-      editWorkTitle: work.title,
-      editWorkDate: work.date,
-      editIdx: idx
-    });
-    window.$("#workModal").modal("show");
-  };
-
-  saveEditWork = () => {
-    const { work, editIdx, editWorkTitle, editWorkDate } = this.state;
-    const newWork = work.slice(0, work.length);
-    newWork[editIdx] = {
-      title: editWorkTitle,
-      date: editWorkDate
-    };
-    this.setState({ work: newWork }, () => {
-      window.$("#workModal").modal("hide");
-      this.handleSubmit();
-    });
   };
 
   deleteClient = () => {
-    const { id } = this.state;
-    Axios.delete(`/client/${id}`)
-      .then(({ data }) => {
-        this.props.history.push("/");
-      })
+    const { _id } = this.state.client;
+    Axios.delete(`/client/${_id}`)
+      .then(_ => this.props.history.push("/"))
       .catch(err => console.log(err));
   };
 
-  addWork = () => {
-    const { addWork, addWorkDate } = this.state;
-    const newWork = this.state.work.slice();
-    newWork.push({ title: addWork, date: addWorkDate });
+  submitWork = () => {
+    const {
+      addWork: { title, date },
+      client
+    } = this.state;
+
+    const newWork = this.state.client.work.slice();
+    newWork.push({ title, date });
+
     this.setState(
-      { work: newWork, addWork: "", addWorkDate: "" },
-      this.handleSubmit
+      {
+        client: { ...client, work: newWork },
+        addWork: { title: "", date: "" }
+      },
+      () => {
+        this.handleSubmit();
+      }
     );
   };
 
+  deleteWork = idx => {
+    let { client } = this.state;
+    let newWork = client.work.slice();
+    newWork.splice(idx, 1);
+    this.setState({ client: { ...client, work: newWork } }, this.handleSubmit);
+  };
+
   render = () => {
+    const { client, addWork, isUpdating } = this.state;
+    if (!client.name) return <div>Loading...</div>;
     const {
       name,
       mobile,
       date,
       work,
-      area,
-      building,
-      room,
-      wing,
-      editWorkTitle,
-      editWorkDate,
-      addWork,
-      addWorkDate
-    } = this.state;
+      address: { wing, room, building, area }
+    } = client;
     return (
       <div className="row container-fluid mt-5">
-        <div className="col-12 col-md-6 col-lg-4 m-auto">
+        {isUpdating && <div className="spinner"></div>}
+        <div className="col-12 col-md-6 col-lg-4 mx-auto">
           <form className="card px-1 py-3" onSubmit={this.handleSubmit}>
-            <div className="card-body">
+            <div className="card-body py-0">
               <div className="row">
                 <div className="col-12">
                   <div className="form-group">
+                    <label>Name: </label>
                     <input
                       type="text"
                       className="form-control"
-                      name="name"
                       value={name}
-                      onChange={this.handleChange}
+                      onChange={e => this.handleChange(e, "client", "name")}
                       placeholder="Name"
                     />
                   </div>
                 </div>
                 <div className="col-12 col-md-6">
                   <div className="form-group">
+                    <label>Mobile: </label>
                     <input
                       type="number"
                       className="form-control"
-                      name="mobile"
                       value={mobile}
-                      onChange={this.handleChange}
+                      onChange={e => this.handleChange(e, "client", "mobile")}
                       placeholder="Mobile"
                     />
                   </div>
                 </div>
                 <div className="col-12 col-md-6">
                   <div className="form-group">
+                    <label>Date: </label>
                     <input
                       type="text"
                       className="form-control"
-                      name="date"
                       value={date}
-                      onChange={this.handleChange}
+                      onChange={e => this.handleChange(e, "client", "date")}
                       placeholder="Date"
                     />
                   </div>
                 </div>
                 <div className="col-12 col-md-6">
                   <div className="form-group">
+                    <label>Area: </label>
                     <input
                       type="text"
                       className="form-control"
-                      name="area"
                       value={area}
-                      onChange={this.handleChange}
+                      onChange={e =>
+                        this.handleChange(e, "client", "address", "area")
+                      }
                       placeholder="Area"
                     />
                   </div>
                 </div>
                 <div className="col-12 col-md-6">
                   <div className="form-group">
+                    <label>Building: </label>
                     <input
                       type="text"
                       className="form-control"
-                      name="building"
                       value={building}
-                      onChange={this.handleChange}
+                      onChange={e =>
+                        this.handleChange(e, "client", "address", "building")
+                      }
                       placeholder="Building"
                     />
                   </div>
                 </div>
                 <div className="col-12 col-md-6">
                   <div className="form-group">
+                    <label>Room: </label>
                     <input
                       type="text"
                       className="form-control"
-                      name="room"
                       value={room}
-                      onChange={this.handleChange}
+                      onChange={e =>
+                        this.handleChange(e, "client", "address", "room")
+                      }
                       placeholder="Room"
                     />
                   </div>
                 </div>
                 <div className="col-12 col-md-6">
                   <div className="form-group">
+                    <label>Wing: </label>
                     <input
                       type="text"
                       className="form-control"
-                      name="wing"
                       value={wing}
-                      onChange={this.handleChange}
+                      onChange={e =>
+                        this.handleChange(e, "client", "address", "wing")
+                      }
                       placeholder="Wing"
                     />
                   </div>
@@ -250,17 +200,17 @@ export default class extends Component {
                 <div className="col-12 text-center">
                   <button
                     type="submit"
-                    className="btn btn-primary btn-block mb-3 px-4"
+                    className="btn btn-primary btn-block d-flex justify-content-center align-items-center mb-3 px-4"
                   >
-                    Update
+                    <span className="ml-2">Update</span>
                   </button>
                   <hr />
                 </div>
                 <div className="col-12 text-center">
                   <input
                     type="button"
-                    className="btn btn-danger btn-block px-4"
-                    value="Delete"
+                    className="btn btn-danger btn-block px-2"
+                    value={`Delete ${name}`}
                     onClick={this.deleteClient}
                   />
                 </div>
@@ -270,123 +220,41 @@ export default class extends Component {
         </div>
         <div className="col-12 col-md-6 col-lg-6 mx-auto">
           <div className="mb-3 mt-3 mt-md-0">
-            <div className="row">
-              <div className="col-12 col-md-6 col-lg-5">
-                <div className="form-group mb-lg-0">
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="addWork"
-                    value={addWork}
-                    onChange={this.handleChange}
-                    placeholder="Work"
-                  />
-                </div>
-              </div>
-              <div className="col-12 col-md-6 col-lg-5">
-                <div className="form-group mb-lg-0">
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="addWorkDate"
-                    value={addWorkDate}
-                    onChange={this.handleChange}
-                    placeholder="Date"
-                  />
-                </div>
-              </div>
-              <div className="col-12 col-lg-2" onClick={this.addWork}>
-                <span className="btn btn-block btn-outline-primary">Add</span>
-              </div>
-            </div>
+            <AddWork
+              addWork={addWork}
+              handleChange={this.handleChange}
+              submitWork={this.submitWork}
+            />
           </div>
           <hr />
-          <table id="work" className="table table-hover">
-            <thead>
-              <tr>
-                <th>Work</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {work.map(({ title, date }, idx) => {
-                return (
-                  <tr
-                    key={uuid()}
-                    style={{ cursor: "pointer" }}
-                    onClick={this.editWork.bind(this, idx)}
-                  >
-                    <td>{title}</td>
-                    <td>{date}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        <div
-          className="modal fade"
-          id="workModal"
-          tabIndex="-1"
-          role="dialog"
-          aria-labelledby="workModalLable"
-          aria-hidden="true"
-        >
-          <div className="modal-dialog" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title" id="workModalLable">
-                  Edit Work
-                </h5>
-                <button
-                  type="button"
-                  className="close"
-                  data-dismiss="modal"
-                  aria-label="Close"
-                >
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div className="modal-body">
-                <div className="form-group">
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="editWorkTitle"
-                    value={editWorkTitle}
-                    onChange={this.handleChange}
-                    placeholder="Title"
-                  />
-                </div>
-                <div className="form-group">
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="editWorkDate"
-                    value={editWorkDate}
-                    onChange={this.handleChange}
-                    placeholder="Date"
-                  />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  data-dismiss="modal"
-                >
-                  Close
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={this.saveEditWork}
-                >
-                  Save changes
-                </button>
-              </div>
-            </div>
-          </div>
+          {work && (
+            <table id="work" className="table table-hover">
+              <thead>
+                <tr>
+                  <th>Work</th>
+                  <th>Date</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {work.map(({ title, date }, idx) => {
+                  return (
+                    <tr
+                      key={uuid()}
+                      style={{ cursor: "pointer" }}
+                      onClick={() => {}}
+                    >
+                      <td>{title}</td>
+                      <td>{date}</td>
+                      <td onClick={this.deleteWork.bind(this, idx)}>
+                        <i className="fal fa-trash-alt text-danger"></i>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     );

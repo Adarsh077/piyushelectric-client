@@ -1,7 +1,5 @@
 import React, { Component } from "react";
-import Axios from "axios";
-
-Axios.defaults.baseURL = "https://piyushelectronics.herokuapp.com/"
+import { Axios } from "../Constants";
 
 export default class extends Component {
   constructor() {
@@ -14,8 +12,8 @@ export default class extends Component {
       building: "",
       room: "",
       wing: "",
-      mobile: "",
-    }
+      mobile: ""
+    };
   }
 
   handleChange = e => {
@@ -30,7 +28,7 @@ export default class extends Component {
       newState[name] = value;
       this.setState(newState);
     }
-  }
+  };
 
   resetState = () => {
     this.setState({
@@ -41,25 +39,30 @@ export default class extends Component {
       building: "",
       room: "",
       wing: "",
-      mobile: "",
-    })
-  }
+      mobile: ""
+    });
+  };
 
   handleSubmit = e => {
     e.preventDefault();
     const { name, area, building, mobile, date, work, wing, room } = this.state;
     if (mobile.length === 10) {
-      Axios.post('/client', {
-        name, mobile, date,
+      Axios.post("/client", {
+        name,
+        mobile,
+        date,
         address: { area, building, wing, room },
         work: [{ title: work, date }]
       })
-        .then(({ data }) => alert("Client Added") || console.log(data) || this.resetState())
-        .catch(err => console.log(err))
+        .then(
+          ({ data }) =>
+            alert("Client Added") || console.log(data) || this.resetState()
+        )
+        .catch(err => console.log(err));
     } else {
-      alert("Mobile No is Incorret")
+      alert("Mobile No is Incorret");
     }
-  }
+  };
 
   render = () => {
     const { name, area, building, room, wing, mobile, work, date } = this.state;
@@ -166,13 +169,18 @@ export default class extends Component {
                   </div>
                 </div>
                 <div className="col-12 text-center">
-                  <button type="submit" className="btn btn-primary btn-block px-4">Add Client</button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary btn-block px-4"
+                  >
+                    Add Client
+                  </button>
                 </div>
               </div>
             </div>
           </form>
         </div>
       </div>
-    )
-  }
+    );
+  };
 }

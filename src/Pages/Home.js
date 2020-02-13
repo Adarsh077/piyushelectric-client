@@ -1,57 +1,31 @@
 import React, { Component } from "react";
-import Axios from "axios";
-import uuid from "uuid/v4"
-
-Axios.defaults.baseURL = "https://piyushelectronics.herokuapp.com/";
+import uuid from "uuid/v4";
+import { Axios } from "../Constants";
 
 export default class extends Component {
-
   constructor() {
-    super()
+    super();
     this.state = {
       clients: []
-    }
+    };
   }
 
   componentDidMount = () => {
-
-    Axios.get("/client")
-      .then(({ data }) =>
-        this.setState({ clients: this.getClients(data) },
-          () => window.$('#example').DataTable()
-        )
-      )
-  }
-
-  getClients = arr => {
-    const clients = [];
-    for (let client of arr) {
-      const { _id, name, mobile, date, work, address: { area, building, wing, room } } = client;
-      clients.push({
-        id: _id,
-        name: name,
-        mobile: mobile,
-        work: work,
-        date: date,
-        area: area,
-        building: building,
-        wing: wing,
-        room: room
-      })
-    }
-    return clients;
-  }
+    Axios.get("/client").then(({ data }) =>
+      this.setState({ clients: data }, () => window.$("#clients").DataTable())
+    );
+  };
 
   updateClient = idx => {
     const { clients } = this.state;
-    localStorage.setItem("clientID", clients[idx].id);
-    this.props.history.push('/updateclient')
-  }
+    localStorage.setItem("client", JSON.stringify(clients[idx]));
+    this.props.history.push("/updateclient");
+  };
 
   render = () => {
     return (
       <div className="container mt-5">
-        <table id="example" className="table table-hover">
+        <table id="clients" className="table table-hover">
           <thead>
             <tr>
               <th>Name</th>
@@ -62,9 +36,15 @@ export default class extends Component {
           </thead>
           <tbody>
             {this.state.clients.map((client, idx) => {
-              const { name, mobile, date, area, wing, room, building } = client;
+              const {
+                name,
+                mobile,
+                date,
+                address: { area, wing, room, building }
+              } = client;
               return (
-                <tr key={uuid()}
+                <tr
+                  key={uuid()}
                   onClick={this.updateClient.bind(this, idx)}
                   style={{ cursor: "pointer" }}
                 >
@@ -75,11 +55,11 @@ export default class extends Component {
                     {`${wing}/${room}, ${building}, ${area}`}
                   </td>
                 </tr>
-              )
+              );
             })}
           </tbody>
         </table>
       </div>
-    )
-  }
+    );
+  };
 }
