@@ -9,7 +9,8 @@ export default class extends Component {
     this.state = {
       client: {},
       isUpdating: false,
-      addWork: { title: "", date: "" }
+      addWork: { title: "", date: "" },
+      deleteWork: { idx: "", title: "", date: "" }
     };
   }
 
@@ -17,9 +18,7 @@ export default class extends Component {
 
   reinitializeData = () => {
     const client = localStorage.getItem("client");
-    this.setState({ client: JSON.parse(client) }, () => {
-      window.$("#work").DataTable();
-    });
+    this.setState({ client: JSON.parse(client) });
   };
 
   handleChange = (e, key1, key2, key3) => {
@@ -81,15 +80,27 @@ export default class extends Component {
     );
   };
 
-  deleteWork = idx => {
-    let { client } = this.state;
+  showDeleteModal = idx => {
+    this.setState({ deleteWork: { ...this.state.client.work[idx], idx: idx } });
+    window.$("#exampleModal").modal("show");
+  };
+
+  deleteWork = () => {
+    let {
+      client,
+      deleteWork: { idx }
+    } = this.state;
     let newWork = client.work.slice();
+    window.$("#exampleModal").modal("hide");
     newWork.splice(idx, 1);
-    this.setState({ client: { ...client, work: newWork } }, this.handleSubmit);
+    this.setState(
+      { client: { ...client, work: newWork }, deleteWork: "" },
+      this.handleSubmit
+    );
   };
 
   render = () => {
-    const { client, addWork, isUpdating } = this.state;
+    const { client, addWork, isUpdating, deleteWork } = this.state;
     if (!client.name) return <div>Loading...</div>;
     const {
       name,
@@ -228,33 +239,72 @@ export default class extends Component {
           </div>
           <hr />
           {work && (
-            <table id="work" className="table table-hover">
+            <table className="table table-hover">
               <thead>
                 <tr>
                   <th>Work</th>
                   <th>Date</th>
-                  <th></th>
                 </tr>
               </thead>
               <tbody>
-                {work.map(({ title, date }, idx) => {
-                  return (
-                    <tr
-                      key={uuid()}
-                      style={{ cursor: "pointer" }}
-                      onClick={() => {}}
-                    >
-                      <td>{title}</td>
-                      <td>{date}</td>
-                      <td onClick={this.deleteWork.bind(this, idx)}>
-                        <i className="fal fa-trash-alt text-danger"></i>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {work.map(({ title, date }, idx) => (
+                  <tr
+                    key={uuid()}
+                    onClick={this.showDeleteModal.bind(this, idx)}
+                  >
+                    <td>{title}</td>
+                    <td>{date}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           )}
+        </div>
+        <div
+          className="modal fade"
+          id="exampleModal"
+          tabIndex="-1"
+          role="dialog"
+          aria-labelledby="exampleModalLabel"
+          aria-hidden="true"
+        >
+          <div className="modal-dialog" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title text-danger" id="exampleModalLabel">
+                  {`Delete ${name}'s Work?`}
+                </h5>
+                <button
+                  type="button"
+                  className="close"
+                  data-dismiss="modal"
+                  aria-label="Close"
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div className="modal-body">
+                Title: {deleteWork.title} <br />
+                Date: {deleteWork.date}
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-dismiss="modal"
+                >
+                  No
+                </button>
+                <button
+                  onClick={this.deleteWork}
+                  type="button"
+                  className="btn btn-danger"
+                >
+                  Yes
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
