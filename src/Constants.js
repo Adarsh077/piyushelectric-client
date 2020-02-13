@@ -1,5 +1,5 @@
 import Axios from "axios";
 
-Axios.defaults.baseURL = "http://localhost:8000";
+Axios.defaults.baseURL = "https://piyushelectronics.herokuapp.com";
 
 export { Axios };
