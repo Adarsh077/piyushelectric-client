@@ -1,5 +1,6 @@
 import React, { Component } from "react";
-import { Axios } from "../Constants";
+import uuid from "uuid/v4";
+import { Axios, buildings } from "../Constants";
 import Overlay from "../Components/Overlay/Overlay";
 
 export default class extends Component {
@@ -156,8 +157,14 @@ export default class extends Component {
                       name="building"
                       value={building}
                       onChange={this.handleChange}
+                      list="buildingList"
                       placeholder="Building"
                     />
+                    <datalist id="buildingList">
+                      {buildings.map(item => (
+                        <option value={item} key={uuid()} />
+                      ))}
+                    </datalist>
                   </div>
                 </div>
                 <div className="col-12 col-md-6">
