@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import uuid from "uuid/v4";
-import { Axios, buildings } from "../Constants";
+import { Axios, buildings, areaList } from "../Constants";
 import Overlay from "../Components/Overlay/Overlay";
 
 export default class extends Component {
@@ -51,7 +51,7 @@ export default class extends Component {
     e.preventDefault();
     const { name, area, building, mobile, date, work, wing, room } = this.state;
     if (mobile.length !== 10) {
-      alert("Mobile No is Incorret");
+      alert("Mobile No is Incorrect");
       return 0;
     }
     this.setState({ isLoading: true });
@@ -144,9 +144,15 @@ export default class extends Component {
                       className="form-control"
                       name="area"
                       value={area}
+                      list="areaList"
                       onChange={this.handleChange}
                       placeholder="Area"
                     />
+                    <datalist id="areaList">
+                      {areaList.map(item => (
+                        <option value={item} key={uuid()} />
+                      ))}
+                    </datalist>
                   </div>
                 </div>
                 <div className="col-12 col-md-6">

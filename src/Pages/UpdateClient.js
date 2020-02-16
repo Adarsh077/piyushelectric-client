@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import uuid from "uuid/v4";
-import { Axios, buildings } from "../Constants";
+import { Axios, buildings, areaList } from "../Constants";
 import AddWork from "../Components/AddWork/AddWork";
 import Overlay from "../Components/Overlay/Overlay";
 
@@ -201,11 +201,17 @@ export default class extends Component {
                       type="text"
                       className="form-control"
                       value={area}
+                      list="areaList"
                       onChange={e =>
                         this.handleChange(e, "client", "address", "area")
                       }
                       placeholder="Area"
                     />
+                    <datalist id="areaList">
+                      {areaList.map(item => (
+                        <option value={item} key={uuid()} />
+                      ))}
+                    </datalist>
                   </div>
                 </div>
                 <div className="col-12 text-center">
