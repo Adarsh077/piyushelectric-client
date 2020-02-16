@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import uuid from "uuid/v4";
 import { Axios } from "../Constants";
 import AddWork from "../Components/AddWork/AddWork";
+import Overlay from "../Components/Overlay/Overlay";
 
 export default class extends Component {
   constructor() {
@@ -24,97 +25,90 @@ export default class extends Component {
   handleChange = (e, key1, key2, key3) => {
     const { value } = e.target,
       state = this.state;
+
     if (key2 === "mobile") if (value.length >= 11) return;
-    if (key3) {
-      state[key1][key2][key3] = value;
-    } else {
-      state[key1][key2] = value;
-    }
+
+    if (key3) state[key1][key2][key3] = value;
+    else state[key1][key2] = value;
+
     this.setState(state);
   };
 
   handleSubmit = e => {
     if (e) e.preventDefault();
+
     const { client } = this.state;
     const { mobile } = client;
+
     if (mobile.toString().length > 10) {
-      alert("Incorrent   No.");
-      return;
+      alert("Please enter corrent Mobile No.: ");
+      return 0;
     }
+
     this.setState({ isUpdating: true });
+
     Axios.put(`/client/`, client)
-      .then(_ => {
-        localStorage.setItem("client", JSON.stringify(_.data));
-        this.setState(
-          { isUpdating: false, client: _.data },
-          this.reinitializeData
-        );
+      .then(({ data }) => {
+        const client = data;
+        localStorage.setItem("client", JSON.stringify(client));
+        this.setState({ isUpdating: false, client }, this.reinitializeData);
       })
-      .catch(err => console.log(err));
+      .catch(err => alert("An Error Occurred!") || console.log(err));
   };
 
   deleteClient = () => {
-    const { _id } = this.state.client;
-    Axios.delete(`/client/${_id}`)
-      .then(_ => this.props.history.push("/"))
-      .catch(err => console.log(err));
+    this.setState({ isUpdating: true });
+    Axios.delete(`/client/${this.state.client._id}`)
+      .then(_ => {
+        localStorage.removeItem("client");
+        this.props.history.replace("/");
+      })
+      .catch(err => alert("An error occurred") || console.log(err));
   };
 
   submitWork = () => {
-    const {
-      addWork: { title, date },
-      client
-    } = this.state;
+    const { addWork, client } = this.state;
+    const { title, date } = addWork;
 
-    const newWork = this.state.client.work.slice();
-    newWork.push({ title, date });
+    if (!title || !date) {
+      alert("All Work feilds are required!");
+      return 0;
+    }
+
+    client.work.push({ title, date });
 
     this.setState(
-      {
-        client: { ...client, work: newWork },
-        addWork: { title: "", date: "" }
-      },
-      () => {
-        this.handleSubmit();
-      }
+      { client, addWork: { title: "", date: "" } },
+      this.handleSubmit
     );
   };
 
   showDeleteModal = idx => {
     this.setState({ deleteWork: { ...this.state.client.work[idx], idx: idx } });
-    window.$("#exampleModal").modal("show");
+    window.$("#deleteWorkModal").modal("show");
   };
 
   deleteWork = () => {
-    let {
-      client,
-      deleteWork: { idx }
-    } = this.state;
-    let newWork = client.work.slice();
-    window.$("#exampleModal").modal("hide");
-    newWork.splice(idx, 1);
-    this.setState(
-      { client: { ...client, work: newWork }, deleteWork: "" },
-      this.handleSubmit
-    );
+    window.$("#deleteWorkModal").modal("hide");
+    let { client, deleteWork } = this.state;
+    client.work.splice(deleteWork.idx, 1);
+    this.setState({ client, deleteWork: "" }, this.handleSubmit);
   };
 
   render = () => {
     const { client, addWork, isUpdating, deleteWork } = this.state;
     if (!client.name) return <div>Loading...</div>;
-    const {
-      name,
-      mobile,
-      date,
-      work,
-      address: { wing, room, building, area }
-    } = client;
+
+    const { name, mobile, date, work, address } = client;
+    const { wing, room, building, area } = address;
+
     return (
       <div className="row container-fluid mt-5">
-        {isUpdating && <div className="spinner"></div>}
+        {isUpdating && <Overlay />}
+
         <div className="col-12 col-md-6 col-lg-4 mx-auto">
           <form className="card px-1 py-3" onSubmit={this.handleSubmit}>
-            <div className="card-body py-0">
+            <div className="card-body">
               <div className="row">
                 <div className="col-12">
                   <div className="form-group">
@@ -154,29 +148,15 @@ export default class extends Component {
                 </div>
                 <div className="col-12 col-md-6">
                   <div className="form-group">
-                    <label>Area: </label>
+                    <label>Wing: </label>
                     <input
                       type="text"
                       className="form-control"
-                      value={area}
+                      value={wing}
                       onChange={e =>
-                        this.handleChange(e, "client", "address", "area")
+                        this.handleChange(e, "client", "address", "wing")
                       }
-                      placeholder="Area"
-                    />
-                  </div>
-                </div>
-                <div className="col-12 col-md-6">
-                  <div className="form-group">
-                    <label>Building: </label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={building}
-                      onChange={e =>
-                        this.handleChange(e, "client", "address", "building")
-                      }
-                      placeholder="Building"
+                      placeholder="Wing"
                     />
                   </div>
                 </div>
@@ -196,15 +176,29 @@ export default class extends Component {
                 </div>
                 <div className="col-12 col-md-6">
                   <div className="form-group">
-                    <label>Wing: </label>
+                    <label>Building: </label>
                     <input
                       type="text"
                       className="form-control"
-                      value={wing}
+                      value={building}
                       onChange={e =>
-                        this.handleChange(e, "client", "address", "wing")
+                        this.handleChange(e, "client", "address", "building")
                       }
-                      placeholder="Wing"
+                      placeholder="Building"
+                    />
+                  </div>
+                </div>
+                <div className="col-12 col-md-6">
+                  <div className="form-group">
+                    <label>Area: </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={area}
+                      onChange={e =>
+                        this.handleChange(e, "client", "address", "area")
+                      }
+                      placeholder="Area"
                     />
                   </div>
                 </div>
@@ -229,6 +223,7 @@ export default class extends Component {
             </div>
           </form>
         </div>
+
         <div className="col-12 col-md-6 col-lg-6 mx-auto">
           <div className="mb-3 mt-3 mt-md-0">
             <AddWork
@@ -238,6 +233,7 @@ export default class extends Component {
             />
           </div>
           <hr />
+
           {work && (
             <table className="table table-hover">
               <thead>
@@ -253,16 +249,24 @@ export default class extends Component {
                     onClick={this.showDeleteModal.bind(this, idx)}
                   >
                     <td>{title}</td>
-                    <td>{date}</td>
+                    <td>
+                      <div className="row">
+                        <div className="col-10">{date}</div>
+                        <div className="col-2">
+                          <i className="fal fa-trash-alt text-danger"></i>
+                        </div>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
         </div>
+
         <div
           className="modal fade"
-          id="exampleModal"
+          id="deleteWorkModal"
           tabIndex="-1"
           role="dialog"
           aria-labelledby="exampleModalLabel"
@@ -284,8 +288,8 @@ export default class extends Component {
                 </button>
               </div>
               <div className="modal-body">
-                Title: {deleteWork.title} <br />
-                Date: {deleteWork.date}
+                <span className="mr-5">{deleteWork.title}</span>
+                {deleteWork.date}
               </div>
               <div className="modal-footer">
                 <button

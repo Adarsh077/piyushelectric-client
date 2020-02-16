@@ -25,8 +25,13 @@ export default ({ addWork: { title, date }, handleChange, submitWork }) => {
           />
         </div>
       </div>
-      <div className="col-12 col-lg-2" onClick={submitWork}>
-        <span className="btn btn-block btn-outline-primary">Add</span>
+      <div className="col-12 col-lg-2">
+        <span
+          className="btn btn-block btn-outline-primary"
+          onClick={submitWork}
+        >
+          Add
+        </span>
       </div>
     </div>
   );

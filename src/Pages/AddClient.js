@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { Axios } from "../Constants";
+import Overlay from "../Components/Overlay/Overlay";
 
 export default class extends Component {
   constructor() {
@@ -12,7 +13,8 @@ export default class extends Component {
       building: "",
       room: "",
       wing: "",
-      mobile: ""
+      mobile: "",
+      isLoading: false
     };
   }
 
@@ -39,35 +41,49 @@ export default class extends Component {
       building: "",
       room: "",
       wing: "",
-      mobile: ""
+      mobile: "",
+      isLoading: false
     });
   };
 
   handleSubmit = e => {
     e.preventDefault();
     const { name, area, building, mobile, date, work, wing, room } = this.state;
-    if (mobile.length === 10) {
-      Axios.post("/client", {
-        name,
-        mobile,
-        date,
-        address: { area, building, wing, room },
-        work: [{ title: work, date }]
-      })
-        .then(
-          ({ data }) =>
-            alert("Client Added") || console.log(data) || this.resetState()
-        )
-        .catch(err => console.log(err));
-    } else {
+    if (mobile.length !== 10) {
       alert("Mobile No is Incorret");
+      return 0;
     }
+    this.setState({ isLoading: true });
+    Axios.post("/client", {
+      name,
+      mobile,
+      date,
+      address: { area, building, wing, room },
+      work: [{ title: work, date }]
+    })
+      .then(_ => this.resetState())
+      .catch(err => {
+        this.setState({ isLoading: false });
+        alert("An Error occured!");
+        console.log(err);
+      });
   };
 
   render = () => {
-    const { name, area, building, room, wing, mobile, work, date } = this.state;
+    const {
+      name,
+      area,
+      building,
+      room,
+      wing,
+      mobile,
+      work,
+      date,
+      isLoading
+    } = this.state;
     return (
       <div className="row container-fluid mt-5">
+        {isLoading && <Overlay />}
         <div className="col-12 col-md-6 col-lg-4 m-auto">
           <form className="card  px-1 py-3" onSubmit={this.handleSubmit}>
             <div className="card-body">
