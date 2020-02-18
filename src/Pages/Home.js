@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import uuid from "uuid/v4";
 import { Axios } from "../Constants";
+import { isLoggedIn } from "../utils";
 
 export default class extends Component {
   constructor() {
@@ -11,11 +12,13 @@ export default class extends Component {
   }
 
   componentDidMount = () => {
-    Axios.get("/client").then(({ data }) =>
-      this.setState({ clients: data.reverse() }, () =>
-        window.$("#clients").DataTable({ aaSorting: [] })
-      )
-    );
+    !isLoggedIn()
+      ? this.props.history.replace("/login")
+      : Axios.get("/client").then(({ data }) =>
+          this.setState({ clients: data.reverse() }, () =>
+            window.$("#clients").DataTable({ aaSorting: [] })
+          )
+        );
   };
 
   updateClient = idx => {

@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import uuid from "uuid/v4";
-import { Axios, buildings, areaList } from "../Constants";
+import { Axios, buildings, areaList, initialClientState } from "../Constants";
 import AddWork from "../Components/AddWork/AddWork";
 import Overlay from "../Components/Overlay/Overlay";
 
@@ -8,7 +8,7 @@ export default class extends Component {
   constructor() {
     super();
     this.state = {
-      client: {},
+      client: initialClientState,
       isUpdating: false,
       addWork: { title: "", date: "" },
       deleteWork: { idx: "", title: "", date: "" }
@@ -70,7 +70,7 @@ export default class extends Component {
     const { addWork, client } = this.state;
     const { title, date } = addWork;
 
-    if (!title || !date) {
+    if (!title.trim() || !date.trim()) {
       alert("All Work feilds are required!");
       return 0;
     }
@@ -97,28 +97,24 @@ export default class extends Component {
 
   render = () => {
     const { client, addWork, isUpdating, deleteWork } = this.state;
-    if (!client.name) return <div>Loading...</div>;
-
     const { name, mobile, date, work, address } = client;
     const { wing, room, building, area } = address;
 
     return (
       <div className="row container-fluid mt-5">
         {isUpdating && <Overlay />}
-
         <div className="col-12 col-md-6 col-lg-4 mx-auto">
           <form className="card px-1 py-3" onSubmit={this.handleSubmit}>
             <div className="card-body">
               <div className="row">
                 <div className="col-12">
                   <div className="form-group">
-                    <label>Name: </label>
                     <input
                       type="text"
-                      className="form-control"
                       value={name}
-                      onChange={e => this.handleChange(e, "client", "name")}
                       placeholder="Name"
+                      className="form-control"
+                      onChange={e => this.handleChange(e, "client", "name")}
                     />
                   </div>
                 </div>
@@ -127,10 +123,10 @@ export default class extends Component {
                     <label>Mobile: </label>
                     <input
                       type="number"
-                      className="form-control"
                       value={mobile}
-                      onChange={e => this.handleChange(e, "client", "mobile")}
                       placeholder="Mobile"
+                      className="form-control"
+                      onChange={e => this.handleChange(e, "client", "mobile")}
                     />
                   </div>
                 </div>
@@ -139,10 +135,10 @@ export default class extends Component {
                     <label>Date: </label>
                     <input
                       type="text"
-                      className="form-control"
                       value={date}
-                      onChange={e => this.handleChange(e, "client", "date")}
                       placeholder="Date"
+                      className="form-control"
+                      onChange={e => this.handleChange(e, "client", "date")}
                     />
                   </div>
                 </div>
@@ -151,12 +147,12 @@ export default class extends Component {
                     <label>Wing: </label>
                     <input
                       type="text"
-                      className="form-control"
                       value={wing}
+                      placeholder="Wing"
+                      className="form-control"
                       onChange={e =>
                         this.handleChange(e, "client", "address", "wing")
                       }
-                      placeholder="Wing"
                     />
                   </div>
                 </div>
@@ -165,12 +161,12 @@ export default class extends Component {
                     <label>Room: </label>
                     <input
                       type="text"
-                      className="form-control"
                       value={room}
+                      placeholder="Room"
                       onChange={e =>
                         this.handleChange(e, "client", "address", "room")
                       }
-                      placeholder="Room"
+                      className="form-control"
                     />
                   </div>
                 </div>
@@ -179,8 +175,8 @@ export default class extends Component {
                     <label>Building: </label>
                     <input
                       type="text"
-                      className="form-control"
                       value={building}
+                      className="form-control"
                       onChange={e =>
                         this.handleChange(e, "client", "address", "building")
                       }

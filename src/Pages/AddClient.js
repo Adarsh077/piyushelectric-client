@@ -6,63 +6,54 @@ import Overlay from "../Components/Overlay/Overlay";
 export default class extends Component {
   constructor() {
     super();
-    this.state = {
-      name: "",
-      work: "",
-      date: "",
-      area: "",
-      building: "",
-      room: "",
-      wing: "",
-      mobile: "",
-      isLoading: false
-    };
+    this.state = this.initialState();
   }
 
-  handleChange = e => {
-    const { value, name } = e.target;
-    const newState = this.state;
-    if (name === "mobile") {
-      if (value.length < 11) {
-        newState[name] = value;
-        this.setState(newState);
-      }
-    } else {
-      newState[name] = value;
-      this.setState(newState);
-    }
+  handleChange = (e, key1, key2) => {
+    const { value } = e.target,
+      state = this.state;
+
+    if (key1 === "mobile") if (value.length >= 11) return;
+
+    if (key2) state[key1][key2] = value;
+    else state[key1] = value;
+
+    this.setState(state);
   };
 
-  resetState = () => {
-    this.setState({
+  initialState = () => {
+    return {
       name: "",
-      work: "",
       date: "",
-      area: "",
-      building: "",
-      room: "",
-      wing: "",
       mobile: "",
+      work: "",
+      address: {
+        area: "",
+        building: "",
+        room: "",
+        wing: ""
+      },
       isLoading: false
-    });
+    };
   };
 
   handleSubmit = e => {
     e.preventDefault();
-    const { name, area, building, mobile, date, work, wing, room } = this.state;
-    if (mobile.length !== 10) {
+
+    let client = this.state;
+    client = {
+      ...client,
+      work: { title: client.work, date: client.date }
+    };
+
+    if (client.mobile.length !== 10) {
       alert("Mobile No is Incorrect");
       return 0;
     }
+
     this.setState({ isLoading: true });
-    Axios.post("/client", {
-      name,
-      mobile,
-      date,
-      address: { area, building, wing, room },
-      work: [{ title: work, date }]
-    })
-      .then(_ => this.resetState())
+    Axios.post("/client", client)
+      .then(_ => this.setState(this.initialState))
       .catch(err => {
         this.setState({ isLoading: false });
         alert("An Error occured!");
@@ -71,17 +62,8 @@ export default class extends Component {
   };
 
   render = () => {
-    const {
-      name,
-      area,
-      building,
-      room,
-      wing,
-      mobile,
-      work,
-      date,
-      isLoading
-    } = this.state;
+    const { name, mobile, date, work, isLoading } = this.state;
+    const { room, wing, area, building } = this.state.address;
     return (
       <div className="row container-fluid mt-5">
         {isLoading && <Overlay />}
@@ -92,12 +74,12 @@ export default class extends Component {
                 <div className="col-12 col-md-6">
                   <div className="form-group">
                     <input
-                      type="text"
-                      className="form-control"
                       name="name"
+                      type="text"
                       value={name}
-                      onChange={this.handleChange}
                       placeholder="Name"
+                      className="form-control"
+                      onChange={e => this.handleChange(e, "name")}
                     />
                   </div>
                 </div>
@@ -105,11 +87,11 @@ export default class extends Component {
                   <div className="form-group">
                     <input
                       type="number"
-                      className="form-control"
                       name="mobile"
                       value={mobile}
-                      onChange={this.handleChange}
                       placeholder="Mobile"
+                      className="form-control"
+                      onChange={e => this.handleChange(e, "mobile")}
                     />
                   </div>
                 </div>
@@ -117,11 +99,11 @@ export default class extends Component {
                   <div className="form-group">
                     <input
                       type="text"
-                      className="form-control"
                       name="work"
                       value={work}
-                      onChange={this.handleChange}
                       placeholder="Work"
+                      className="form-control"
+                      onChange={e => this.handleChange(e, "work")}
                     />
                   </div>
                 </div>
@@ -129,11 +111,11 @@ export default class extends Component {
                   <div className="form-group">
                     <input
                       type="text"
-                      className="form-control"
                       name="date"
                       value={date}
-                      onChange={this.handleChange}
                       placeholder="Date"
+                      className="form-control"
+                      onChange={e => this.handleChange(e, "date")}
                     />
                   </div>
                 </div>
@@ -141,12 +123,12 @@ export default class extends Component {
                   <div className="form-group">
                     <input
                       type="text"
-                      className="form-control"
                       name="area"
                       value={area}
                       list="areaList"
-                      onChange={this.handleChange}
                       placeholder="Area"
+                      className="form-control"
+                      onChange={e => this.handleChange(e, "address", "area")}
                     />
                     <datalist id="areaList">
                       {areaList.map(item => (
@@ -159,12 +141,14 @@ export default class extends Component {
                   <div className="form-group">
                     <input
                       type="text"
-                      className="form-control"
                       name="building"
                       value={building}
-                      onChange={this.handleChange}
                       list="buildingList"
                       placeholder="Building"
+                      className="form-control"
+                      onChange={e =>
+                        this.handleChange(e, "address", "building")
+                      }
                     />
                     <datalist id="buildingList">
                       {buildings.map(item => (
@@ -177,11 +161,11 @@ export default class extends Component {
                   <div className="form-group">
                     <input
                       type="text"
-                      className="form-control"
                       name="room"
                       value={room}
-                      onChange={this.handleChange}
                       placeholder="Room"
+                      className="form-control"
+                      onChange={e => this.handleChange(e, "address", "room")}
                     />
                   </div>
                 </div>
@@ -189,11 +173,11 @@ export default class extends Component {
                   <div className="form-group">
                     <input
                       type="text"
-                      className="form-control"
                       name="wing"
                       value={wing}
-                      onChange={this.handleChange}
                       placeholder="Wing"
+                      className="form-control"
+                      onChange={e => this.handleChange(e, "address", "wing")}
                     />
                   </div>
                 </div>

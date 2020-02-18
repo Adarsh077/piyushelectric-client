@@ -21,7 +21,8 @@ thead th {
   border: 0px !important;
 }
 
-tbody tr {
+tbody tr,
+.nav-link {
   cursor: pointer;
 }
 

@@ -2,6 +2,19 @@ import Axios from "axios";
 
 Axios.defaults.baseURL = "https://piyushelectronics.herokuapp.com";
 
+const initialClientState = {
+  name: "",
+  date: "",
+  mobileNo: "",
+  address: {
+    wing: "",
+    room: "",
+    building: "",
+    area: ""
+  },
+  work: []
+};
+
 const areaList = ["Global City", "Y. K Nagar", "HDIL Layout"];
 
 const buildings = [
@@ -60,4 +73,4 @@ const buildings = [
   "Datta Krishna Height"
 ];
 
-export { Axios, buildings, areaList };
+export { Axios, buildings, areaList, initialClientState };
