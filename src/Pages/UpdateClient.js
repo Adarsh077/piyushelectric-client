@@ -1,6 +1,12 @@
 import React, { Component } from "react";
 import uuid from "uuid/v4";
-import { Axios, buildings, areaList, initialClientState } from "../Constants";
+import {
+  Axios,
+  buildings,
+  areaList,
+  initialClientState,
+  wingList
+} from "../Constants";
 import AddWork from "../Components/AddWork/AddWork";
 import Overlay from "../Components/Overlay/Overlay";
 
@@ -10,8 +16,7 @@ export default class extends Component {
     this.state = {
       client: initialClientState,
       isUpdating: false,
-      addWork: { title: "", date: "" },
-      deleteWork: { idx: "", title: "", date: "" }
+      addWork: { title: "", date: "" }
     };
   }
 
@@ -49,21 +54,22 @@ export default class extends Component {
 
     Axios.put(`/client/`, client)
       .then(({ data }) => {
-        const client = data;
-        localStorage.setItem("client", JSON.stringify(client));
-        this.setState({ isUpdating: false, client }, this.reinitializeData);
+        localStorage.setItem("client", JSON.stringify(data));
+        this.setState({ isUpdating: !!0, client: data }, this.reinitializeData);
       })
       .catch(err => alert("An Error Occurred!") || console.log(err));
   };
 
   deleteClient = () => {
-    this.setState({ isUpdating: true });
-    Axios.delete(`/client/${this.state.client._id}`)
-      .then(_ => {
-        localStorage.removeItem("client");
-        this.props.history.replace("/");
-      })
-      .catch(err => alert("An error occurred") || console.log(err));
+    if (window.confirm(`Delete ${this.state.client.name}'s data?`)) {
+      this.setState({ isUpdating: true });
+      Axios.delete(`/client/${this.state.client._id}`)
+        .then(_ => {
+          localStorage.removeItem("client");
+          this.props.history.replace("/");
+        })
+        .catch(err => alert("An error occurred") || console.log(err));
+    }
   };
 
   submitWork = () => {
@@ -83,22 +89,26 @@ export default class extends Component {
     );
   };
 
-  showDeleteModal = idx => {
-    this.setState({ deleteWork: { ...this.state.client.work[idx], idx: idx } });
-    window.$("#deleteWorkModal").modal("show");
-  };
+  deleteWork = idx => {
+    const { client } = this.state;
+    const work = client.work[idx];
 
-  deleteWork = () => {
-    window.$("#deleteWorkModal").modal("hide");
-    let { client, deleteWork } = this.state;
-    client.work.splice(deleteWork.idx, 1);
-    this.setState({ client, deleteWork: "" }, this.handleSubmit);
+    const confirm = window.confirm(`
+    Delete ${client.name}'s work?
+
+    ${work.title}   ${work.date}
+    `);
+
+    if (confirm) {
+      client.work.splice(idx, 1);
+      this.setState({ client }, this.handleSubmit);
+    }
   };
 
   render = () => {
-    const { client, addWork, isUpdating, deleteWork } = this.state;
-    const { name, mobile, date, work, address } = client;
-    const { wing, room, building, area } = address;
+    const { addWork, isUpdating } = this.state;
+    const { name, mobile, date, work } = this.state.client;
+    const { wing, room, building, area } = this.state.client.address;
 
     return (
       <div className="row container-fluid mt-5">
@@ -122,7 +132,7 @@ export default class extends Component {
                   <div className="form-group">
                     <label>Mobile: </label>
                     <input
-                      type="number"
+                      type="tel"
                       value={mobile}
                       placeholder="Mobile"
                       className="form-control"
@@ -149,11 +159,17 @@ export default class extends Component {
                       type="text"
                       value={wing}
                       placeholder="Wing"
+                      list="wingList"
                       className="form-control"
                       onChange={e =>
                         this.handleChange(e, "client", "address", "wing")
                       }
                     />
+                    <datalist id="wingList">
+                      {wingList.map(item => (
+                        <option value={item} key={uuid()} />
+                      ))}
+                    </datalist>
                   </div>
                 </div>
                 <div className="col-12 col-md-6">
@@ -252,10 +268,7 @@ export default class extends Component {
               </thead>
               <tbody>
                 {work.map(({ title, date }, idx) => (
-                  <tr
-                    key={uuid()}
-                    onClick={this.showDeleteModal.bind(this, idx)}
-                  >
+                  <tr key={uuid()} onClick={this.deleteWork.bind(this, idx)}>
                     <td>{title}</td>
                     <td>
                       <div className="row">
@@ -270,53 +283,6 @@ export default class extends Component {
               </tbody>
             </table>
           )}
-        </div>
-
-        <div
-          className="modal fade"
-          id="deleteWorkModal"
-          tabIndex="-1"
-          role="dialog"
-          aria-labelledby="exampleModalLabel"
-          aria-hidden="true"
-        >
-          <div className="modal-dialog" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title text-danger" id="exampleModalLabel">
-                  {`Delete ${name}'s Work?`}
-                </h5>
-                <button
-                  type="button"
-                  className="close"
-                  data-dismiss="modal"
-                  aria-label="Close"
-                >
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div className="modal-body">
-                <span className="mr-5">{deleteWork.title}</span>
-                {deleteWork.date}
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  data-dismiss="modal"
-                >
-                  No
-                </button>
-                <button
-                  onClick={this.deleteWork}
-                  type="button"
-                  className="btn btn-danger"
-                >
-                  Yes
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     );

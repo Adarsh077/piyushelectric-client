@@ -48,13 +48,11 @@ export default class extends Component {
                       <input
                         required
                         value={password}
-                        id="passsword"
                         type="password"
                         placeholder="Password"
                         className="form-control"
                         onChange={e => this.handleChange(e.target.value)}
                       />
-                      <label htmlFor="passsword">Password</label>
                     </div>
                     <div className="custom-control custom-checkbox mb-3">
                       <input

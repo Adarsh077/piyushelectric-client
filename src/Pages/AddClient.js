@@ -1,12 +1,22 @@
 import React, { Component } from "react";
 import uuid from "uuid/v4";
-import { Axios, buildings, areaList } from "../Constants";
+import {
+  Axios,
+  buildings,
+  areaList,
+  initialClientState,
+  workList,
+  wingList
+} from "../Constants";
 import Overlay from "../Components/Overlay/Overlay";
 
 export default class extends Component {
   constructor() {
     super();
-    this.state = this.initialState();
+    this.state = {
+      ...initialClientState,
+      isLoading: false
+    };
   }
 
   handleChange = (e, key1, key2) => {
@@ -23,16 +33,7 @@ export default class extends Component {
 
   initialState = () => {
     return {
-      name: "",
-      date: "",
-      mobile: "",
-      work: "",
-      address: {
-        area: "",
-        building: "",
-        room: "",
-        wing: ""
-      },
+      ...initialClientState,
       isLoading: false
     };
   };
@@ -41,12 +42,9 @@ export default class extends Component {
     e.preventDefault();
 
     let client = this.state;
-    client = {
-      ...client,
-      work: { title: client.work, date: client.date }
-    };
+    client.work = { title: client.work, date: client.date };
 
-    if (client.mobile.length !== 10) {
+    if (client.mobile && client.mobile.length !== 10) {
       alert("Mobile No is Incorrect");
       return 0;
     }
@@ -64,6 +62,7 @@ export default class extends Component {
   render = () => {
     const { name, mobile, date, work, isLoading } = this.state;
     const { room, wing, area, building } = this.state.address;
+
     return (
       <div className="row container-fluid mt-5">
         {isLoading && <Overlay />}
@@ -73,6 +72,7 @@ export default class extends Component {
               <div className="row">
                 <div className="col-12 col-md-6">
                   <div className="form-group">
+                    <label>Name: </label>
                     <input
                       name="name"
                       type="text"
@@ -85,8 +85,9 @@ export default class extends Component {
                 </div>
                 <div className="col-12 col-md-6">
                   <div className="form-group">
+                    <label>Mobile: </label>
                     <input
-                      type="number"
+                      type="tel"
                       name="mobile"
                       value={mobile}
                       placeholder="Mobile"
@@ -97,18 +98,26 @@ export default class extends Component {
                 </div>
                 <div className="col-12 col-md-6">
                   <div className="form-group">
+                    <label>Work: </label>
                     <input
                       type="text"
                       name="work"
                       value={work}
+                      list="workList"
                       placeholder="Work"
                       className="form-control"
                       onChange={e => this.handleChange(e, "work")}
                     />
+                    <datalist id="workList">
+                      {workList.map(item => (
+                        <option value={item} key={uuid()} />
+                      ))}
+                    </datalist>
                   </div>
                 </div>
                 <div className="col-12 col-md-6">
                   <div className="form-group">
+                    <label>Date: </label>
                     <input
                       type="text"
                       name="date"
@@ -121,6 +130,7 @@ export default class extends Component {
                 </div>
                 <div className="col-12 col-md-6">
                   <div className="form-group">
+                    <label>Area: </label>
                     <input
                       type="text"
                       name="area"
@@ -139,6 +149,7 @@ export default class extends Component {
                 </div>
                 <div className="col-12 col-md-6">
                   <div className="form-group">
+                    <label>Building: </label>
                     <input
                       type="text"
                       name="building"
@@ -159,6 +170,7 @@ export default class extends Component {
                 </div>
                 <div className="col-12 col-md-6">
                   <div className="form-group">
+                    <label>Room: </label>
                     <input
                       type="text"
                       name="room"
@@ -171,14 +183,21 @@ export default class extends Component {
                 </div>
                 <div className="col-12 col-md-6">
                   <div className="form-group">
+                    <label>Wing: </label>
                     <input
                       type="text"
                       name="wing"
                       value={wing}
+                      list="wingList"
                       placeholder="Wing"
                       className="form-control"
                       onChange={e => this.handleChange(e, "address", "wing")}
                     />
+                    <datalist id="wingList">
+                      {wingList.map(item => (
+                        <option value={item} key={uuid()} />
+                      ))}
+                    </datalist>
                   </div>
                 </div>
                 <div className="col-12 text-center">

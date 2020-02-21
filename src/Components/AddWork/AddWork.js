@@ -1,4 +1,6 @@
 import React from "react";
+import uuid from "uuid/v4";
+import { workList } from "../../Constants";
 
 export default ({ addWork: { title, date }, handleChange, submitWork }) => {
   return (
@@ -9,9 +11,15 @@ export default ({ addWork: { title, date }, handleChange, submitWork }) => {
             type="text"
             className="form-control"
             value={title}
+            list="workList"
             onChange={e => handleChange(e, "addWork", "title")}
             placeholder="Work"
           />
+          <datalist id="workList">
+            {workList.map(item => (
+              <option value={item} key={uuid()} />
+            ))}
+          </datalist>
         </div>
       </div>
       <div className="col-12 col-md-6 col-lg-5">
